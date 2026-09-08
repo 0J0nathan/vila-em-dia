@@ -1,0 +1,181 @@
+:root {
+    --bg-dark: #ffffff;
+    --bg-alt: #f5f5f5;
+    --text-light: #333333;
+    --santos-gold: #C8A84B;
+    --santos-gold-dark: #8A6E2F;  /* CORRIGIDO: versão escura do dourado, para texto com contraste OK */
+    --border: #dddddd;
+    --font-heading: 'Anton', sans-serif;
+    --font-body: 'Fraunces', serif;
+    --transicao-padrao: 0.3s ease;
+}
+
+body, html {
+    margin: 0; padding: 0;
+    font-family: var(--font-body); font-style: normal;
+    background-color: var(--bg-dark); color: var(--text-light);
+    scroll-behavior: smooth;
+}
+
+.sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+
+/* Acessibilidade */
+.skip-link {
+    position: absolute; left: -999px; top: 0;
+    background: var(--santos-gold); color: #000;
+    padding: 10px 16px; z-index: 1001; font-weight: 700;
+    border-radius: 0 0 8px 0;
+}
+.skip-link:focus { left: 0; }
+:focus-visible { outline: 3px solid var(--santos-gold-dark); outline-offset: 2px; }
+
+/* Header */
+.top-header {
+    position: fixed; top: 0; width: 100%; z-index: 1000;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 30px; box-sizing: border-box;
+    background: #ffffff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    color: #333;
+}
+.logo { font-family: var(--font-heading); font-size: 1.5rem; color: #333; letter-spacing: 1px; }
+.logo span { color: var(--santos-gold-dark); }
+
+/* CORRIGIDO: botão hambúrguer (escondido no desktop) */
+.nav-toggle{
+    display:none; background:none; border:1px solid var(--border); border-radius:6px;
+    font-size:1.3rem; padding:4px 10px; cursor:pointer;
+}
+
+.main-nav { display: flex; gap: 20px; align-items: center; }
+.nav-item { position: relative; }
+.nav-item a, .dropbtn {
+    color: #333; text-decoration: none; font-size: 0.9rem; font-weight: 700;
+    background: none; border: none; cursor: pointer; font-family: var(--font-heading);
+}
+.nav-item a:hover, .dropbtn:hover { color: var(--santos-gold-dark); }
+
+.dropdown-content {
+    display: none;
+    position: absolute; top: 100%; left: 0;
+    background-color: #fff; min-width: 160px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2); z-index: 1;
+    border-radius: 5px; overflow: hidden;
+    border: 1px solid var(--border);
+}
+.dropdown-content a {
+    color: #333; padding: 12px 16px; text-decoration: none; display: block;
+    font-family: var(--font-body);
+}
+.dropdown-content a:hover { background-color: var(--santos-gold); color: #000; }
+.nav-item:hover .dropdown-content, .nav-item:focus-within .dropdown-content { display: block; }
+
+.header-widgets { display: flex; gap: 15px; font-size: 0.9rem; color: #333; font-weight: 700; }
+
+/* Hero */
+.hero-fullscreen {
+    position: relative; width: 100%; height: 100vh;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+    background: #000;
+}
+.hero-video { position: absolute; min-width: 100%; min-height: 100%; object-fit: cover; z-index: 0; }
+.hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); z-index: 1; }
+
+.giant-titles { position: relative; z-index: 2; text-align: center; width: 100%; }
+.giant-titles h1 {
+    position: absolute; width: 100%; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: clamp(20px, 4vw, 60px);
+    font-weight: 900; color: #fff; margin: 0;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    font-family: var(--font-heading); font-style: normal; text-transform: uppercase; letter-spacing: -1px;
+}
+/* CORRIGIDO: removido o "scale" do keyframe — agora é SÓ opacity, como o relatório já dizia que deveria ser */
+@keyframes apareceESome {
+    0%   { opacity: 0; }
+    20%  { opacity: 1; }
+    50%  { opacity: 1; }
+    70%  { opacity: 0; }
+    100% { opacity: 0; }
+}
+.title-1 { animation: apareceESome 10s ease-in-out 0s forwards; }
+.title-2 { animation: apareceESome 10s ease-in-out 4s forwards; }
+
+.scroll-arrow {
+    position: absolute; bottom: 30px; z-index: 2; color: #fff; font-size: 2rem;
+    text-decoration: none; animation: bounce 2s infinite; text-shadow: 0 2px 5px #000;
+}
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+/* Control bar + busca */
+.control-bar {
+    padding: 20px 30px; background: var(--bg-alt); border-bottom: 1px solid var(--border);
+    display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between;
+}
+.search-box{ flex:1 1 240px; }
+.search-box input{
+    width:100%; padding:10px 16px; border-radius:999px; border:1px solid var(--border);
+    font-family:var(--font-body); font-size:.9rem;
+}
+.action-links { display: flex; gap: 15px; justify-content: flex-end; flex-wrap:wrap; }
+.btn {
+    padding: 12px 25px; border-radius: 30px; text-decoration: none; font-weight: 700;
+    color: #000; font-family: var(--font-body); font-style: italic;
+    transition: transform var(--transicao-padrao), box-shadow var(--transicao-padrao);
+}
+.btn:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+.btn-waze { background-color: #333; color: #fff; }
+.btn-whats { background-color: var(--santos-gold); }
+
+.category-nav { display: flex; flex-wrap:wrap; justify-content: center; gap: 10px; padding: 15px; background: var(--bg-dark); }
+.cat-btn {
+    /* CORRIGIDO: texto escuro sobre branco = contraste OK; dourado vira só o preenchimento quando ativo */
+    background: #fff; border: 2px solid var(--santos-gold); color: var(--santos-gold-dark);
+    padding: 8px 20px; border-radius: 20px; font-weight: 700; cursor: pointer; font-family: var(--font-body);
+    transition: background var(--transicao-padrao), color var(--transicao-padrao);
+}
+.cat-btn.active-cat, .cat-btn:hover { background: var(--santos-gold); color: #000; }
+
+/* Split view */
+.explore-container { display: flex; height: 80vh; }
+.locais-lista {
+    width: 35%; overflow-y: auto; background: var(--bg-alt);
+    border-right: 1px solid var(--border); padding: 20px;
+}
+.locais-lista h3 { font-family: var(--font-heading); color: var(--santos-gold-dark); }
+.local-item {
+    background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 8px;
+    cursor: pointer; transition: box-shadow 0.2s; border: 1px solid var(--border);
+}
+.local-item:hover, .local-item:focus-visible { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.mapa-wrapper { width: 65%; height: 100%; position: relative; }
+#map { width: 100%; height: 100%; }
+.leaflet-tile { filter: none; }
+
+.site-footer { text-align: center; padding: 20px; background: var(--bg-alt); font-size: 0.8rem; color: #888; }
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .explore-container { flex-direction: column; height: auto; }
+    .locais-lista { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+    .mapa-wrapper { width: 100%; height: 50vh; }
+
+    /* CORRIGIDO: em vez de sumir, o menu agora abre como painel abaixo do header */
+    .nav-toggle{ display:inline-block; }
+    .main-nav{
+        display:none; position:absolute; top:100%; left:0; width:100%;
+        background:#fff; flex-direction:column; gap:0; padding:10px 0;
+        box-shadow:0 8px 16px rgba(0,0,0,.12);
+    }
+    .main-nav.aberto{ display:flex; }
+    .nav-item{ padding:10px 20px; }
+    .dropdown-content{ position:static; box-shadow:none; border:none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
