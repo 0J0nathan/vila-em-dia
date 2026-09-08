@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bairro da Vila Belmiro – Guia do Torcedor</title>
+    <meta name="description" content="Tudo sobre a Vila Belmiro: clima, trânsito, comércios, próximos jogos e muito mais.">
+    
+    <!-- Open Graph / Redes Sociais -->
+    <meta property="og:title" content="Bairro da Vila Belmiro">
+    <meta property="og:description" content="O coração do Santos FC. Informações em tempo real para torcedores e visitantes.">
+    <meta property="og:image" content="https://via.placeholder.com/1200x630.png?text=Vila+Belmiro">
+    <meta property="og:url" content="https://seudominio.com">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Dados Estruturados (Schema.org) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Place",
+      "name": "Vila Belmiro",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Santos",
+        "addressRegion": "SP",
+        "addressCountry": "BR"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "-23.9518",
+        "longitude": "-46.3391"
+      },
+      "description": "Estádio do Santos Futebol Clube, conhecido como 'O Alçapão'."
+    }
+    </script>
+
+    <!-- Fontes e CSS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Topbar com Clima e Relógio (role="banner") -->
+    <header class="top-header" role="banner" aria-label="Cabeçalho com informações do clima e relógio">
+        <div class="header-info">
+            <span id="clima-widget" aria-live="polite">🌤️ --°C</span>
+            <span class="separator">|</span>
+            <span id="relogio-widget" aria-live="polite">--:--</span>
+        </div>
+        <div class="frase-linha">
+            <span class="coroa" aria-hidden="true">👑</span>
+            <span class="onda-mar">entre os ecos do mar e da torcida.</span>
+            <span class="peixe" aria-hidden="true">🐟</span>
+        </div>
+    </header>
+
+    <!-- Hero Fullscreen (vídeo + títulos) -->
+    <section class="hero-fullscreen" role="main" aria-label="Vídeo de fundo e título principal">
+        <video autoplay muted loop playsinline preload="metadata" class="hero-video" aria-label="Vídeo de fundo mostrando a Vila Belmiro">
+            <source src="static/video.webm" type="video/webm">
+            <source src="static/video.mp4" type="video/mp4">
+            Seu navegador não suporta vídeos.
+        </video>
+        <div class="hero-overlay"></div>
+
+        <div class="giant-titles">
+            <h1 class="title-1">Bairro da Vila Belmiro</h1>
+            <h1 class="title-2">A Mística Vila do Rei</h1>
+        </div>
+
+        <a href="#explore" class="scroll-arrow" aria-label="Rolar para o conteúdo principal">↓</a>
+    </section>
+
+    <!-- Barra de Controle (próximo jogo e ações) -->
+    <section id="explore" class="control-bar" aria-label="Barra de controle com contagem regressiva e links úteis">
+        <div class="timer-container">
+            <span class="timer-label">PRÓXIMO JOGO:</span>
+            <span id="countdown" aria-live="polite">Calculando...</span>
+        </div>
+        <div class="action-links">
+            <a href="#" id="btnWaze" class="btn btn-waze" target="_blank" rel="noopener noreferrer">🚗 Navegar Waze</a>
+            <a href="#" id="btnWhats" class="btn btn-whats" target="_blank" rel="noopener noreferrer">💬 Avisar Vizinho</a>
+        </div>
+    </section>
+
+    <!-- Filtros do Mapa -->
+    <nav class="category-nav" role="navigation" aria-label="Filtros para pontos de interesse no mapa">
+        <button class="cat-btn active-cat" data-target="todos" aria-pressed="true">Mostrar Tudo</button>
+        <button class="cat-btn" data-target="transporte" aria-pressed="false">Transporte</button>
+        <button class="cat-btn" data-target="comer" aria-pressed="false">Comer & Beber</button>
+        <button class="cat-btn" data-target="estacionamento" aria-pressed="false">Estacionamentos</button>
+    </nav>
+
+    <!-- Mapa (com lazy loading) -->
+    <section class="fullscreen-map" aria-label="Mapa interativo da Vila Belmiro e arredores">
+        <div id="map" role="application" aria-label="Mapa com pontos de transporte, comércio e estacionamentos"></div>
+    </section>
+
+    <!-- Bento Grid (Painéis Dinâmicos) -->
+    <section class="bento-grid" aria-label="Painéis informativos sobre o bairro">
+        <div class="bento-item card-jogos">
+            <h3>📅 Próximos Jogos</h3>
+            <ul id="proximos-jogos">
+                <li>10/09 - Santos x Palmeiras - 18:30</li>
+                <li>17/09 - Santos x Corinthians - 16:00</li>
+                <li>24/09 - Santos x São Paulo - 20:00</li>
+            </ul>
+        </div>
+        <div class="bento-item card-comercios">
+            <h3>🍻 Destaques do Bairro</h3>
+            <div id="comercio-destaque">
+                <p><strong>Bar do Zé</strong> – O melhor pastel antes do jogo!</p>
+                <p><strong>Padaria Santista</strong> – Pão na chapa e café.</p>
+            </div>
+        </div>
+        <div class="bento-item card-transito">
+            <h3>🚦 Status do Trânsito</h3>
+            <p id="status-transito">Movimento intenso nas proximidades devido ao jogo de hoje.</p>
+        </div>
+        <div class="bento-item card-social">
+            <h3>📱 #VilaBelmiro</h3>
+            <p>Posts recentes (simulados):</p>
+            <ul>
+                <li>@torcedor1: "Hoje tem gol do Peixe!"</li>
+                <li>@visitante: "Que estádio lindo!"</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Chatbot IA (flutuante) -->
+    <div id="chatbot-container" role="dialog" aria-label="Chatbot assistente da Vila">
+        <button id="chatbot-toggle" aria-expanded="false" aria-controls="chatbot-window">💬 Peixão da Vila</button>
+        <div id="chatbot-window" hidden>
+            <div id="chatbot-messages" role="log" aria-live="polite"></div>
+            <form id="chatbot-form">
+                <input type="text" id="chatbot-input" placeholder="Pergunte sobre o bairro..." aria-label="Digite sua pergunta">
+                <button type="submit" aria-label="Enviar pergunta">➤</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Rodapé -->
+    <footer class="site-footer" role="contentinfo">
+        <p>Projeto acadêmico - Universidade Virtual do Estado de São Paulo (UNIVESP).</p>
+    </footer>
+
+    <!-- Scripts (carregamento assíncrono) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+    <script src="animations.js" defer></script>
+    <script src="chatbot.js" defer></script>
+    <script src="app.js" defer></script>
+</body>
+</html>
