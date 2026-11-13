@@ -1,99 +1,157 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // 1. Relógio e Clima (Santos)
+    // 1. Data Atual
+    function atualizarData() {
+        const d = new Date();
+        const dia = String(d.getDate()).padStart(2, '0');
+        const mes = String(d.getMonth() + 1).padStart(2, '0');
+        const ano = d.getFullYear();
+        const dataEl = document.getElementById('data-widget');
+        if (dataEl) dataEl.textContent = `${dia}/${mes}/${ano}`;
+    }
+    atualizarData();
+    setInterval(atualizarData, 60000);
+
+    // 2. Relógio e Clima
     setInterval(() => { 
         let d = new Date(); 
-        document.getElementById('relogio-widget').innerText = 
-            d.getHours().toString().padStart(2,'0') + ":" + d.getMinutes().toString().padStart(2,'0'); 
+        const relogioEl = document.getElementById('relogio-widget');
+        if (relogioEl) {
+            relogioEl.innerText = 
+                d.getHours().toString().padStart(2,'0') + ":" + d.getMinutes().toString().padStart(2,'0'); 
+        }
     }, 1000);
 
     fetch('https://api.open-meteo.com/v1/forecast?latitude=-23.9518&longitude=-46.3391&current_weather=true')
         .then(res => res.json())
-        .then(data => { document.getElementById('clima-widget').innerText = `🌡️ ${Math.round(data.current_weather.temperature)}°C`; })
+        .then(data => { 
+            const climaEl = document.getElementById('clima-widget');
+            if (climaEl) climaEl.innerText = `🌡️ ${Math.round(data.current_weather.temperature)}°C`; 
+        })
         .catch(() => console.log("Erro clima."));
 
-    // 2. Cronômetro
-    const dataDoJogo = new Date('2026-09-10T18:30:00').getTime();
-    setInterval(() => {
-        const dist = dataDoJogo - new Date().getTime();
-        if (dist > 0) {
-            const d = Math.floor(dist / 86400000);
-            const h = Math.floor((dist % 86400000) / 3600000);
-            const m = Math.floor((dist % 3600000) / 60000);
-            const s = Math.floor((dist % 60000) / 1000);
-            document.getElementById('countdown').innerText = `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
-        } else {
-            document.getElementById('countdown').innerText = "A BOLA ESTÁ ROLANDO!";
-        }
-    }, 1000);
+    // 3. Lógica do Próximo Jogo
+    const jogos = [
+        { data: '2026-11-18T19:30:00', timeA: 'Coritiba', timeB: 'Santos', local: 'Couto Pereira (Curitiba)', rodada: '35ª' },
+        { data: '2026-11-23T21:00:00', timeA: 'Santos', timeB: 'Grêmio', local: 'MorumBIS (São Paulo)', rodada: '36ª' },
+        { data: '2026-11-29T16:00:00', timeA: 'Vitória', timeB: 'Santos', local: 'Barradão (Salvador)', rodada: '37ª' },
+        { data: '2026-12-02T21:30:00', timeA: 'Santos', timeB: 'Botafogo', local: 'Vila Belmiro (Santos)', rodada: '38ª' }
+    ];
 
-    // 3. Deep Links (Waze exato e WhatsApp com alerta de bloqueio)
-    const latVila = -23.9518;
-    const lngVila = -46.3391;
-    
-    document.getElementById('btnWaze').setAttribute('href', `https://www.waze.com/ul?ll=${latVila},${lngVila}&navigate=yes&zoom=17`);
-    
-    const textoWhatsApp = "Alerta de Mobilidade: Jogo na Vila Belmiro hoje! Fique atento aos bloqueios de trânsito nas ruas ao entorno do estádio (Princesa Isabel, Tiradentes e arredores).";
-    document.getElementById('btnWhats').setAttribute('href', `https://wa.me/?text=${encodeURIComponent(textoWhatsApp)}`);
+    function atualizarProximoJogo() {
+        const agora = new Date().getTime();
+        let proximoJogo = null;
+        let menorDistancia = Infinity;
 
-    // 4. Mapa - Centrado no Estádio
-    const mapa = L.map('map', { scrollWheelZoom: false }).setView([latVila, lngVila], 17);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapa);
-    
-    // Marcador principal da Vila Belmiro
-    L.circleMarker([latVila, lngVila], { radius: 12, fillColor: "#ffffff", color: "#C8A84B", weight: 3, fillOpacity: 1 })
-     .addTo(mapa).bindPopup("<b>Vila Belmiro (Urbano Caldeira)</b><br>O Alçapão do Peixe").openPopup();
-
-    let camadaAtual = L.layerGroup().addTo(mapa);
-    const estiloPino = { radius: 8, fillColor: "#C8A84B", color: "#000000", weight: 2, fillOpacity: 0.9 };
-    
-    // 5. Dados Reais e Mapeados do Entorno Imediato da Vila Belmiro
-    const dadosMapa = {
-        'transporte': [
-            { lat: -23.9511, lng: -46.3385, pop: 'Ponto de Ônibus - Av. Bernardino de Campos' },
-            { lat: -23.9525, lng: -46.3401, pop: 'Ponto de Ônibus - Rua Princesa Isabel' }
-        ],
-        'comer': [
-            { lat: -23.9518, lng: -46.3391, pop: 'Villa Santos Bar - Rua Princesa Isabel' },
-            { lat: -23.9523, lng: -46.3378, pop: 'La Casa - Rua Carvalho de Mendonça' },
-            { lat: -23.9507, lng: -46.3382, pop: 'Nakazumy Sushi - Av. Bernardino de Campos' }
-        ],
-        'estacionamento': [
-            { lat: -23.9515, lng: -46.3388, pop: 'Madú Estacionamento - Rua Carvalho de Mendonça' },
-            { lat: -23.9520, lng: -46.3383, pop: 'ElegantS Estacionamento - Rua Carvalho de Mendonça' },
-            { lat: -23.9504, lng: -46.3395, pop: 'Estacionamento Rotativo - Entorno do Estádio' }
-        ]
-    };
-
-    function plotarPontos(categoria) {
-        camadaAtual.clearLayers();
-        
-        // Se a categoria for 'todos', unimos todas as chaves do objeto dadosMapa
-        let categoriasParaPlotar = categoria === 'todos' ? Object.keys(dadosMapa) : [categoria];
-        
-        categoriasParaPlotar.forEach(cat => {
-            if (dadosMapa[cat]) {
-                dadosMapa[cat].forEach(ponto => {
-                    L.circleMarker([ponto.lat, ponto.lng], estiloPino)
-                     .addTo(camadaAtual)
-                     .bindPopup(`<b>${ponto.pop}</b>`);
-                });
+        jogos.forEach(jogo => {
+            const dataJogo = new Date(jogo.data).getTime();
+            const dist = dataJogo - agora;
+            if (dist > 0 && dist < menorDistancia) {
+                menorDistancia = dist;
+                proximoJogo = jogo;
             }
+        });
+
+        const container = document.getElementById('conteudo-jogo');
+        if (!container) return;
+
+        if (proximoJogo) {
+            const dataFormatada = new Date(proximoJogo.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const horaFormatada = new Date(proximoJogo.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+            container.innerHTML = `
+                <p style="font-size: 1.2rem; font-weight: 700; color: var(--text-light); margin-bottom: 10px;">
+                    ${proximoJogo.timeA} x ${proximoJogo.timeB}
+                </p>
+                <p>📅 <strong>${dataFormatada}</strong> às <strong>${horaFormatada}</strong></p>
+                <p>📍 ${proximoJogo.local}</p>
+                <p>🏆 Rodada ${proximoJogo.rodada}</p>
+            `;
+        } else {
+            container.innerHTML = '<p>Nenhum jogo futuro agendado no momento.</p>';
+        }
+    }
+
+    atualizarProximoJogo();
+    setInterval(atualizarProximoJogo, 60000);
+
+    // 4. Navegação entre Abas
+    const links = document.querySelectorAll('#menu-links > li > a[data-target]');
+    const sections = document.querySelectorAll('.content-section');
+
+    links.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('#menu-links a').forEach(l => l.classList.remove('active'));
+            sections.forEach(s => s.classList.remove('active'));
+            link.classList.add('active');
+            const targetId = link.getAttribute('data-target');
+            document.getElementById(targetId).classList.add('active');
+            
+            window.scrollTo({ top: 600, behavior: 'smooth' });
+            if (targetId === 'comercio-aba') setTimeout(initMapComercio, 100);
+        });
+    });
+
+    // 5. Mapa de Comércio
+    const comerciosData = [
+        { id: 1, nome: 'Restaurante Sabor da Vila', tipo: 'Restaurante', lat: -23.9525, lng: -46.3390, cor: '#FF3E7F' },
+        { id: 2, nome: 'Chaveiro do Seu Antônio', tipo: 'Chaveiro', lat: -23.9518, lng: -46.3402, cor: '#29E7CD' },
+        { id: 3, nome: 'Manicure da Ana', tipo: 'Manicure', lat: -23.9512, lng: -46.3385, cor: '#C8A84B' },
+        { id: 4, nome: 'Bar do Carlinhos', tipo: 'Bar', lat: -23.9530, lng: -46.3375, cor: '#FF3E7F' },
+        { id: 5, nome: 'Panificadora São Luiz', tipo: 'Padaria', lat: -23.9505, lng: -46.3410, cor: '#29E7CD' }
+    ];
+
+    let mapComercio;
+
+    function initMapComercio() {
+        if (mapComercio) return;
+
+        mapComercio = L.map('map-comercio', { scrollWheelZoom: false }).setView([-23.9518, -46.3391], 16);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapComercio);
+
+        const listaContainer = document.getElementById('lista-comercios-container');
+        if (!listaContainer) return;
+        listaContainer.innerHTML = '';
+
+        comerciosData.forEach((comercio) => {
+            const item = document.createElement('div');
+            item.className = 'lista-item';
+            item.innerHTML = `<h4>${comercio.nome}</h4><p>${comercio.tipo}</p>`;
+            item.dataset.id = comercio.id;
+
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.lista-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                if (mapComercio && mapComercio.eachLayer) {
+                    mapComercio.eachLayer((layer) => {
+                        if (layer instanceof L.CircleMarker) {
+                            mapComercio.removeLayer(layer);
+                        }
+                    });
+                }
+
+                const marker = L.circleMarker([comercio.lat, comercio.lng], {
+                    radius: 12,
+                    fillColor: comercio.cor,
+                    color: '#000',
+                    weight: 3,
+                    fillOpacity: 1
+                }).addTo(mapComercio)
+                  .bindPopup(`<b>${comercio.nome}</b><br>${comercio.tipo}`)
+                  .openPopup();
+
+                mapComercio.flyTo([comercio.lat, comercio.lng], 18, {
+                    duration: 1.5
+                });
+            });
+
+            listaContainer.appendChild(item);
         });
     }
 
-    // Inicia com todos os pontos reais desenhados no entorno da Vila
-    plotarPontos('todos');
-
-    // Manipulação dos Botões de Filtro
-    const catButtons = document.querySelectorAll('.cat-btn');
-    catButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            catButtons.forEach(b => b.classList.remove('active-cat'));
-            e.target.classList.add('active-cat');
-            
-            const targetCategory = e.target.getAttribute('data-target');
-            plotarPontos(targetCategory);
-        });
-    });
+    if(document.getElementById('comercio-aba').classList.contains('active')) {
+        setTimeout(initMapComercio, 100);
+    }
 });
