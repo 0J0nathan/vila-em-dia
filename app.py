@@ -1,54 +1,67 @@
-from flask import Flask, render_template, jsonify
+from pathlib import Path
 import sqlite3
-import time
+
 import requests
+from flask import Flask, jsonify, render_template
 
-app = Flask(__name__)
+BASE_DIR = Path(__file__).resolve().parent
+DB_URI = BASE_DIR.joinpath("banco.db").as_uri() + "?mode=ro"  # somente leitura (compatível com a Vercel)
 
-# Função para buscar os comércios no banco (Se você já tiver o banco.db)
-def obter_locais():
+# Na Vercel os arquivos estáticos vêm da pasta public/. Usar a mesma pasta
+# localmente mantém os dois ambientes iguais.
+app = Flask(__name__, static_folder="public", static_url_path="")
+
+
+def consultar(sql):
+    """Executa um SELECT no banco.db e devolve uma lista de dicionários."""
     try:
-        conexao = sqlite3.connect('banco.db')
-        conexao.row_factory = sqlite3.Row
-        cursor = conexao.cursor()
-        cursor.execute('SELECT nome, categoria, latitude, longitude FROM comercios')
-        locais = cursor.fetchall()
-        conexao.close()
-        return [dict(l) for l in locais]
-    except Exception as e:
-        print(f"Aviso: Banco de dados não encontrado ou vazio ({e}). Usando dados fixos.")
-        # Caso o banco não exista, retorna os dados fixos da versão estática
-        return [
-            {'nome': 'Santos Store', 'categoria': 'comercio', 'latitude': -23.95144, 'longitude': -46.34041},
-            {'nome': 'Café da Vila', 'categoria': 'comercio', 'latitude': -23.95144, 'longitude': -46.34041},
-            {'nome': 'Bar do Zé', 'categoria': 'comercio', 'latitude': -23.95232, 'longitude': -46.33062}
-        ]
+        con = sqlite3.connect(DB_URI, uri=True)
+        con.row_factory = sqlite3.Row
+        linhas = [dict(r) for r in con.execute(sql).fetchall()]
+        con.close()
+        return linhas
+    except sqlite3.Error as erro:
+        print(f"Aviso: não consegui ler o banco.db ({erro}). Rode: python criar_banco.py")
+        return []
 
-# Rota 1: A sua página original (Produção)
-@app.route('/')
+
+def obter_locais():
+    return consultar("SELECT id, nome, categoria, endereco, latitude, longitude FROM comercios ORDER BY nome")
+
+
+def obter_jogos():
+    return consultar("SELECT id, mandante, visitante, data_hora, local, rodada FROM eventos ORDER BY data_hora")
+
+
+@app.route("/")
+@app.route("/v2")
 def home():
-    return render_template('index.html')
+    return render_template("index_v2.html", pontos_mapa=obter_locais(), jogos=obter_jogos())
 
-# Rota 2: A nova versão (Visual Times Square)
-@app.route('/v2')
-def home_v2():
-    # Passamos os locais para o HTML caso você queira usar no futuro
-    locais = obter_locais()
-    return render_template('index_v2.html', pontos_mapa=locais)
 
-# Rota 3: API do Clima (Otimização de Performance)
-@app.route('/api/clima')
+@app.route("/api/locais")
+def api_locais():
+    return jsonify(obter_locais())
+
+
+@app.route("/api/jogos")
+def api_jogos():
+    return jsonify(obter_jogos())
+
+
+@app.route("/api/clima")
 def api_clima():
     try:
         resp = requests.get(
             "https://api.open-meteo.com/v1/forecast",
             params={"latitude": -23.9518, "longitude": -46.3391, "current_weather": True},
-            timeout=5
+            timeout=5,
         )
+        resp.raise_for_status()
         return jsonify(resp.json())
-    except:
-        return jsonify({"current_weather": {"temperature": 25}})
+    except requests.RequestException:
+        return jsonify({"erro": "clima indisponível"}), 503
 
-if __name__ == '__main__':
-    # debug=True só para ambiente local
+
+if __name__ == "__main__":
     app.run(debug=True)

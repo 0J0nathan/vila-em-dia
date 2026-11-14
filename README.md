@@ -43,3 +43,21 @@ O projeto foi desenvolvido como parte da disciplina **Projeto Integrador em Comp
 ---
 
 ## 📁 Estrutura do Repositório
+
+
+---
+
+## ▶️ Como rodar localmente
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate          # Windows (Linux/Mac: source .venv/bin/activate)
+pip install -r requirements.txt
+python criar_banco.py           # cria o banco.db (comércios e jogos)
+python app.py                   # abre em http://127.0.0.1:5000
+```
+
+Testes: `pip install -r requirements-dev.txt` e depois `pytest`.
+
+Os arquivos estáticos ficam em `public/` (padrão exigido pela Vercel).
+API própria: `/api/locais` e `/api/jogos`. API externa: Open-Meteo (clima).

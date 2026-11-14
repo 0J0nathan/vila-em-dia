@@ -579,6 +579,8 @@ html
         <p>Projeto acadêmico sem fins lucrativos.</p>
     </footer>
 
+    <script id="dados-locais" type="application/json">{{ pontos_mapa|tojson }}</script>
+    <script id="dados-jogos" type="application/json">{{ jogos|tojson }}</script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>

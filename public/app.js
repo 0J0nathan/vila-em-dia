@@ -31,12 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(() => console.log("Erro clima."));
 
     // 3. Lógica do Próximo Jogo
-    const jogos = [
-        { data: '2026-11-18T19:30:00', timeA: 'Coritiba', timeB: 'Santos', local: 'Couto Pereira (Curitiba)', rodada: '35ª' },
-        { data: '2026-11-23T21:00:00', timeA: 'Santos', timeB: 'Grêmio', local: 'MorumBIS (São Paulo)', rodada: '36ª' },
-        { data: '2026-11-29T16:00:00', timeA: 'Vitória', timeB: 'Santos', local: 'Barradão (Salvador)', rodada: '37ª' },
-        { data: '2026-12-02T21:30:00', timeA: 'Santos', timeB: 'Botafogo', local: 'Vila Belmiro (Santos)', rodada: '38ª' }
-    ];
+    function lerJSON(id) {
+        const el = document.getElementById(id);
+        try { return el ? JSON.parse(el.textContent) : []; } catch (e) { return []; }
+    }
+    const jogos = lerJSON('dados-jogos').map(g => ({
+        data: g.data_hora, timeA: g.mandante, timeB: g.visitante, local: g.local, rodada: g.rodada
+    }));
 
     function atualizarProximoJogo() {
         const agora = new Date().getTime();
@@ -94,59 +95,58 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 5. Mapa de Comércio
-    const comerciosData = [
-        { id: 1, nome: 'Restaurante Sabor da Vila', tipo: 'Restaurante', lat: -23.9525, lng: -46.3390, cor: '#FF3E7F' },
-        { id: 2, nome: 'Chaveiro do Seu Antônio', tipo: 'Chaveiro', lat: -23.9518, lng: -46.3402, cor: '#29E7CD' },
-        { id: 3, nome: 'Manicure da Ana', tipo: 'Manicure', lat: -23.9512, lng: -46.3385, cor: '#C8A84B' },
-        { id: 4, nome: 'Bar do Carlinhos', tipo: 'Bar', lat: -23.9530, lng: -46.3375, cor: '#FF3E7F' },
-        { id: 5, nome: 'Panificadora São Luiz', tipo: 'Padaria', lat: -23.9505, lng: -46.3410, cor: '#29E7CD' }
-    ];
+    const ROTULOS = { comer: 'Comer e beber', estacionamento: 'Estacionamento', transporte: 'Transporte', turismo: 'Turismo' };
+    const CORES = { comer: '#FF3E7F', estacionamento: '#29E7CD', transporte: '#C8A84B', turismo: '#FFFFFF' };
+    const comerciosData = lerJSON('dados-locais').map(p => ({
+        id: p.id, nome: p.nome, endereco: p.endereco || '', lat: p.latitude, lng: p.longitude,
+        tipo: ROTULOS[p.categoria] || p.categoria, cor: CORES[p.categoria] || '#C8A84B'
+    }));
 
     let mapComercio;
+
+    function popupDe(c) {
+        const box = document.createElement('div');
+        const nome = document.createElement('b');
+        nome.textContent = c.nome;
+        box.append(nome, document.createElement('br'), document.createTextNode(c.endereco || c.tipo));
+        return box;
+    }
 
     function initMapComercio() {
         if (mapComercio) return;
 
         mapComercio = L.map('map-comercio', { scrollWheelZoom: false }).setView([-23.9518, -46.3391], 16);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapComercio);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapComercio);
 
         const listaContainer = document.getElementById('lista-comercios-container');
         if (!listaContainer) return;
         listaContainer.innerHTML = '';
 
-        comerciosData.forEach((comercio) => {
+        if (!comerciosData.length) {
+            listaContainer.textContent = 'Nenhum local cadastrado.';
+            return;
+        }
+
+        comerciosData.forEach((c) => {
+            const marker = L.circleMarker([c.lat, c.lng], {
+                radius: 10, fillColor: c.cor, color: '#000', weight: 2, fillOpacity: 1
+            }).addTo(mapComercio).bindPopup(popupDe(c));
+
             const item = document.createElement('div');
             item.className = 'lista-item';
-            item.innerHTML = `<h4>${comercio.nome}</h4><p>${comercio.tipo}</p>`;
-            item.dataset.id = comercio.id;
+            item.tabIndex = 0;
+            const h4 = document.createElement('h4'); h4.textContent = c.nome;
+            const p = document.createElement('p'); p.textContent = c.tipo + (c.endereco ? ' · ' + c.endereco : '');
+            item.append(h4, p);
 
-            item.addEventListener('click', () => {
+            const abrir = () => {
                 document.querySelectorAll('.lista-item').forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
-
-                if (mapComercio && mapComercio.eachLayer) {
-                    mapComercio.eachLayer((layer) => {
-                        if (layer instanceof L.CircleMarker) {
-                            mapComercio.removeLayer(layer);
-                        }
-                    });
-                }
-
-                const marker = L.circleMarker([comercio.lat, comercio.lng], {
-                    radius: 12,
-                    fillColor: comercio.cor,
-                    color: '#000',
-                    weight: 3,
-                    fillOpacity: 1
-                }).addTo(mapComercio)
-                  .bindPopup(`<b>${comercio.nome}</b><br>${comercio.tipo}`)
-                  .openPopup();
-
-                mapComercio.flyTo([comercio.lat, comercio.lng], 18, {
-                    duration: 1.5
-                });
-            });
-
+                mapComercio.flyTo([c.lat, c.lng], 18, { duration: 1.2 });
+                marker.openPopup();
+            };
+            item.addEventListener('click', abrir);
+            item.addEventListener('keydown', (e) => { if (e.key === 'Enter') abrir(); });
             listaContainer.appendChild(item);
         });
     }
